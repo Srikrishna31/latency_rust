@@ -107,3 +107,11 @@ A typical example is CPU branch prediction in conditional statements. When the p
 ### CPU Frequency scaling and Hardware Power saving
 
 `CPU frequency scaling` is a mechanism where CPUs run faster or slower depending on power requirements configured by the operating system. For example, if the operating system detects that a laptop has a low battery, it can scale down the CPU frequency to reduce power usage. Of course, this means your application will also have higher latency. Similarly, operating systems can configure the CPU clock frequency to run at a highger temperature in scenarios with high CPU utilization. In other words, as you increase the load on your application, observed latency is lower for short periods because the CPU runs faster.
+
+### Virtualization
+
+With `virtualization`, you partition physical hardware into virtual machines. You can use either hypervisors that utilize hardware-based virtualization (such as KVM) or software-based virtualization (such as Docker) to partition the hardware. However, in both cases, sharing resources can be a significant source of latency spikes because applications running on one virtual machine can impact the performance of applications running on another unrelated virtual machine. When running under virtualization, the following types of overhead can impact latency:
+
+    * `Hypervisor overhead`--The hypervisor is the systems software responsible for managing access to physical hardware resources among multiple virtual machines(VMs), where you can run your operating system and applications isolated from other VMs. The hypervisor consists of a virtual machine monitor (VMM) and a device model, and both have overheads from multiplexing the physical hardware between multiple tenants, which can impact tail latency compared to running on bare metal.
+
+    * `Resource contention`--Contention can occur when multiple VMs share the same physical resources, such as CPU, memory, and I/O
