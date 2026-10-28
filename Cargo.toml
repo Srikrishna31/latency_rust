@@ -1,0 +1,17 @@
+[package]
+name = "latency_rust"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+path = "periodic_gate.rs"
+
+[dependencies]
+
+
+[dev-dependencies]
+criterion = "0.8.2"
+
+[[bench]]
+name = "periodic_gate"
+harness = false
