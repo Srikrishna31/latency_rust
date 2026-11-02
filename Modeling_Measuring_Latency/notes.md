@@ -130,3 +130,24 @@ The operating system layer is the part of the software stack that applications c
   Many popular programming languages such as JavaScript and Python, are not compiled to native code but, instead, run on a managed runtime. The managed runtime makes running code safer and provides automatic memory management. However, some parts of the runtimes themselves can cause latncy spikes in your application:
   * `Just-in-time (JIT) compilation--Managed runtimes don't execute the program directly. Instead, they often interpret the application code and compile it into native code on demand (just-in-time) for optimized execution. This JIT compilation step occurs transparentely as the application executes, but it can cause latency spikes because compilation takes time and happens when the runtime decides it's worthwhile. Your application may run at a constant speed for minutes but then suddenly experience a pause as the JIT compiler starts to optimize a code path. While the application likely runs faster after the compilation step, the JIT compilation step itself can cause an unacceptable latency spike. To address this issue, some runtimes offer ahead-of-time (AOT) compilation, allowing you to precompile your application code before execution.
   * `Garbage collection(GC)--Managed runtimes make the life of programmer simpler with automatic memory allocation. However, the GC step, which attempts to free unused memory, can cause latncy spikes for some duration of the GC procedure. Today, there are a variety of GC algorithms, some designed for low latency needs. When building for low latency, ensure you understand how the GC algorithm works, avoid allocating memory in the fast paths, and verify you have tuned its parameters correctly to maintain acceptable latency.
+
+### Application
+
+The biggest potential for improvement most often lies in your application. However, the specific techniques you should use really depend on what your application does, what requirements it has for availability, fault tolerance, consistency, and so on, and what kind of latency target you have.
+
+## Compounding Latency
+As important as it is to know the sources of latency, it's also crucial to understand that delays can add up because latency compounds. Even slight delays in different system parts can build up to ruin latency. That's why building a low-latency application requires holistic thinking. 
+  * `Propagation latency` is the time it takes for a bit to travel from one place to another. We can calculate propagation delay by dividing the distance D by the speed of transmission S:
+  
+        $$
+            P = \frac{D}\frac{P}
+        $$
+  When you have two machines connected by an ethernet cable, the propagation delay represents the time it takes for a packet to travel across the physical wire. However, in most situations, network communication involves multiple hops across various networks.
+  * `Transmission Latency` is the time it takes for the whole packet to travel between two links, including error detection and retransmission. We can calculate the transmission delay by dividing the length of the packet L by the transmission rate R:
+
+        $$
+            T = \frac{L}\frac{R}
+        $$
+  * `Processing Latency` is the time it takes to process a request actively. For example, when processing HTTP requests, processing latency is the sum of the parts needed to produce an HTTP response for a given HTTP request. The processing involves HTTP protocol parsing, a routing decision to determine the semantics of the request, parsing the payload, performing some business logic, retrieving data from a database and so on.
+  * `Queuing Latency` is the time a request spends in a queue waiting. The OS scheduler adds the application's process to its internal queue to make an application sleep, when it requests information from external sources like database, or network packets etc. But when the data arrives, the OS doesn't always switch back to running the application because it might be executing another process. As a result, our system exeperiences queuing latency because of the OS scheduling delay. There are also internal queues in the different components you use in your application, which you'll need to take into consideration when optimizing for low latency.
+  * `Serial compounding` is how latency compounds when the different components execute in sequence.
