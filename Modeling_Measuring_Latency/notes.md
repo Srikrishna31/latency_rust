@@ -150,4 +150,29 @@ As important as it is to know the sources of latency, it's also crucial to under
         $$
   * `Processing Latency` is the time it takes to process a request actively. For example, when processing HTTP requests, processing latency is the sum of the parts needed to produce an HTTP response for a given HTTP request. The processing involves HTTP protocol parsing, a routing decision to determine the semantics of the request, parsing the payload, performing some business logic, retrieving data from a database and so on.
   * `Queuing Latency` is the time a request spends in a queue waiting. The OS scheduler adds the application's process to its internal queue to make an application sleep, when it requests information from external sources like database, or network packets etc. But when the data arrives, the OS doesn't always switch back to running the application because it might be executing another process. As a result, our system exeperiences queuing latency because of the OS scheduling delay. There are also internal queues in the different components you use in your application, which you'll need to take into consideration when optimizing for low latency.
-  * `Serial compounding` is how latency compounds when the different components execute in sequence.
+  * `Serial compounding` is how latency compounds when the different components execute in sequence. For example, in HTTP processing, you must first perform HTTP protocol parsing to determine the request method and path before you can route the request to the correct request handler. You can reduce seially compounding latency by speeding up the individual components, parallelizing execution, or sometimes both.
+  * `Parallel Compounding` is how latency compounds when the different components execute in parallel. If you have a computation that partitions into multiple independent tasks, you can reduce latency by executing those tasks in parallel. For example, the MapReduce paradigm is a great example of this optimization strategy. But, the more you parallelize or fan out, the more likely you are to experience tail latency. So, whenever you are reducing latency by parallelizing execution, you need to pay extra attention to the latency variability in your components.
+  * `Quorum compounding` is a variant of parallel compounding. The different components execute in parallel, but we only need to wait for the majority of the components to complete. It is similar to parallel compounding but can be optimized more efficiently by exploiting the fact that you don't need a response from all nodes.
+
+  ## Measuring Latency
+
+  The key to measuring latency is clearly defining what to measure based on what you need to optimize for and controlling the environment accordingly. However, controlling the environment is tricky and can depend on your system's architecture. 
+
+  But even if you know what to measure and can control the environment, you must also pay attention to how you measure latency. The `observer effect` refers to the phenomenon where the act of measuring a system alters its behavior, thereby affecting the accuracy of the measurement. In latency measurement, this is particularly a probelm when a load generator or measurement tool runs on the same machine as the system under test. This colocation consumes shared resources such as CPU, memory and I/O bandwidth, introducing additional contention and overhead that can impact the latency results. Furthermore, the system itself may adapt to the load, meaning that observing the system with different configurations can lead to wildly different results. It is therefore critical to isolate the measurement infrastructure from the system under test and to pay attention to the configuration when you are measuring for reproducible results.
+
+  `Coordinated omission` is a problem where the tool you use to measure latency accidentally coordinates with the system under measurement, resulting in outliers not being recorded, making the latency distribution look better than it is. If you are unaware of the phenomenon, you might measure latency using the following straightforward method:
+
+    1. Record the start timestamp S
+    2. Send a request, and wait for a response
+    3. Record the end timestamp E.
+    4. Report request latency as the duration between start and end, E - S.
+
+  The problem with this approach is that the benchmark tool coordinates with the system because it waits for the system to respond before sending out another request. When the system becomes slow to process requests during benchmarking, the tool sends fewer requests to the system because of the waiting and, therefore, observes fewer requests experiencing the latency variability than in the real world. 
+
+  To solve coordinated omission, you can benchmark latcny by sending requests at fixed intervals:
+
+    1. Record the start timestamp S.
+    2. Send a request.
+    3. Wait for a fixed interval, and then start a new request.
+    4. Handle responses asynchronously, recording the end timestamps E.
+    5. Report request latency as the duration between start and end, E - S.
