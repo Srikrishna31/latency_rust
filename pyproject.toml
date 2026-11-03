@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "latency-rust-scripts"
+version = "0.1.0"
+description = "Python scripts for modeling and measuring latency"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.2,<3",
+    "ping3>=4,<5",
+]
+
+[tool.setuptools]
+# Install dependency metadata only; scripts remain runnable from their source paths.
+py-modules = []
